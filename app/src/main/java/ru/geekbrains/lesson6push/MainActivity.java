@@ -1,8 +1,23 @@
 package ru.geekbrains.lesson6push;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.content.Context;
+import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
+import android.widget.EditText;
+
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
+
+import java.util.Objects;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -10,5 +25,38 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        initGetToken();
+        initNotificationChannel();
+
+    }
+
+    private void initGetToken() {
+        final EditText textToken = findViewById(R.id.textToken);
+        FirebaseInstanceId.getInstance().getInstanceId()
+                .addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<InstanceIdResult> task) {
+                        if (!task.isSuccessful()) {
+                            Log.w("PushMessage", "getInstanceId failed",
+                                    task.getException());
+                            return;
+                        }
+                        String token = Objects.requireNonNull(task.getResult()).getToken();
+                        //String token = task.getResult().getToken();
+                        textToken.setText(token);
+                    }
+                });
+    }
+
+    private void initNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationManager notificationManager = (NotificationManager)
+                    getSystemService(Context.NOTIFICATION_SERVICE);
+            int importance = NotificationManager.IMPORTANCE_LOW;
+            NotificationChannel channel = new NotificationChannel("2", "name",
+                    importance);
+            notificationManager.createNotificationChannel(channel);
+        }
     }
 }
